@@ -2,25 +2,31 @@
 
 namespace Alleswebdev\Tools;
 
+/**
+ * Class Memcached
+ * @package Alleswebdev\Tools
+ */
 Class Memcached
 {
-
     protected $socket = null;
     protected $address = null;
     protected $port = null;
+    protected $buf = '';
 
-    public function connect(string $host = 'localhost', int $port = 11211)
+    /**
+     * @param string $host
+     * @param int $port
+     * @return bool
+     */
+    public function connect(string $host = "localhost", int $port = 11211)
     {
         $this->address = gethostbyname($host);
-        $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         $this->port = $port;
-        if (!$this->socket) {
-            echo "error socket create: " . socket_strerror(socket_last_error()) . "\n";
-            return false;
-        }
 
-        if (!socket_connect($this->socket, $this->address, $this->port)) {
-            echo "error socket connect " . socket_strerror(socket_last_error($this->socket,)) . "\n";
+        $this->socket = @fsockopen("127.0.0.1", "11211");
+        stream_set_timeout($this->socket, 5);
+        if (!$this->socket) {
+            echo "cant connect to server";
             return false;
         }
 
@@ -29,18 +35,80 @@ Class Memcached
 
     public function close()
     {
-        socket_close($this->socket);
-        return true;
+        fclose($this->socket);
     }
 
-    public function sendCommand(string $data, int $returnSize = 2048)
+    /**
+     * @param string $data
+     * @return bool|string
+     */
+    public function sendCommand(string $data)
     {
-        $data = trim($data) . '\r\n';
-        if (!socket_write($this->socket, $data, strlen($data))){
-            echo "error write or zero byte was written " . socket_strerror(socket_last_error($this->socket,)) . "\n";
+        $data = trim($data);
+        $data .= "\r\n";
+        $this->buf = '';
+        if (!fwrite($this->socket, $data)) {
+            echo "error write or zero byte was written\n";
             return false;
         }
 
-        return (string) socket_read($this->socket, $returnSize);
+        $this->buf = fgets($this->socket);
+
+        return trim($this->buf);
+    }
+
+    /**
+     * @return bool|string
+     */
+    public function getVersion()
+    {
+        return $this->sendCommand("version");
+    }
+
+    /**
+     * @param string $key
+     */
+    public function add(string $key)
+    {
+        $this->sendCommand(1);
+    }
+
+    /**
+     * @param string $key
+     */
+    public function set(string $key)
+    {
+        $this->sendCommand(1);
+    }
+
+    /**
+     * @param string $key
+     */
+    public function delete(string $key)
+    {
+        $this->sendCommand(1);
+    }
+
+    /**
+     * @param string $server
+     * @param string $port
+     * @param string $command
+     * @return bool|string
+     */
+    public static function sendCommandEx(string $command, string $server = "localhost", string $port = "11211")
+    {
+        $socket = @fsockopen($server,$port);
+        stream_set_timeout($socket, 5);
+        if (!$socket){
+            echo "Cant connect to:".$server.':'.$port;
+            return false;
+        }
+
+        fwrite($socket, $command."\r\n");
+
+        $buf = fgets($socket, 256);
+        fclose($socket);
+
+        return trim($buf);
     }
 }
