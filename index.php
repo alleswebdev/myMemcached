@@ -1,5 +1,6 @@
 <?php
-require_once ("memcached.php");
+require_once("memcached.php");
+
 use \Alleswebdev\Tools\Memcached;
 
 //ob_implicit_flush();

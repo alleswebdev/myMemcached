@@ -23,7 +23,7 @@ Class Memcached
         $this->address = gethostbyname($host);
         $this->port = $port;
 
-        $this->socket = @fsockopen("127.0.0.1", "11211");
+        $this->socket = @fsockopen($host, $port);
         stream_set_timeout($this->socket, 5);
         if (!$this->socket) {
             echo "cant connect to server";
@@ -91,20 +91,20 @@ Class Memcached
 
     /**
      * @param string $server
-     * @param string $port
+     * @param int $port
      * @param string $command
      * @return bool|string
      */
-    public static function sendCommandEx(string $command, string $server = "localhost", string $port = "11211")
+    public static function sendCommandEx(string $command, string $server = "localhost", int $port = 11211)
     {
-        $socket = @fsockopen($server,$port);
+        $socket = @fsockopen($server, $port);
         stream_set_timeout($socket, 5);
-        if (!$socket){
-            echo "Cant connect to:".$server.':'.$port;
+        if (!$socket) {
+            echo "Cant connect to:" . $server . ':' . $port;
             return false;
         }
 
-        fwrite($socket, $command."\r\n");
+        fwrite($socket, $command . "\r\n");
 
         $buf = fgets($socket, 256);
         fclose($socket);
