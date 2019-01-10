@@ -1,8 +1,12 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: abc
- * Date: 10.01.19
- * Time: 20:50
- */
-phpinfo();
+require_once("memcached.php");
+
+use \Alleswebdev\Tools\Memcached;
+
+//ob_implicit_flush();
+
+$app = new Memcached();
+$app->connect();
+echo $app->getVersion() . "\r\n";
+$app->close();
+echo $app::sendCommandEx("version");
