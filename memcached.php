@@ -52,7 +52,30 @@ Class Memcached
             return false;
         }
 
-        $this->buf = fgets($this->socket);
+        while ((!feof($this->socket))) {
+            $this->buf .= fgets($this->socket, 256);
+            if (strpos($this->buf, "END\r\n") !== false) {
+                break;
+            }
+            if (strpos($this->buf, "DELETED\r\n") !== false || strpos($this->buf, "NOT_FOUND\r\n") !== false) {
+                break;
+            }
+            if (strpos($this->buf, "OK\r\n") !== false) {
+                break;
+            }
+            if (strpos($this->buf, "STORED\r\n") !== false) {
+                break;
+            }
+            if (strpos($this->buf, "VERSION ") !== false) {
+                break;
+            }
+            if (strpos($this->buf, "NOT_FOUND") !== false) {
+                break;
+            }
+            if (strpos($this->buf, "DELETED") !== false) {
+                break;
+            }
+        }
 
         return trim($this->buf);
     }
@@ -66,27 +89,48 @@ Class Memcached
     }
 
     /**
-     * @param string $key
+     * @return bool|string
      */
-    public function add(string $key)
+    public function stat()
     {
-        $this->sendCommand(1);
+        return $this->sendCommand("stats");
     }
 
     /**
      * @param string $key
+     * @param string $value
+     * @param int $exp
+     * @return bool
      */
-    public function set(string $key)
+    public function set(string $key, string $value, int $exp = 3600)
     {
-        $this->sendCommand(1);
+        $command = "set " . $key . " 0 " . $exp . ' ' . strlen($value) . "\r\n";
+        $command .= $value;
+        return "STORED" === $this->sendCommand($command);
     }
 
     /**
      * @param string $key
+     * @return array|bool
+     */
+    public function get(string $key)
+    {
+        $command = "get " . $key;
+        $output = $this->sendCommand($command);
+        if (strpos($output, "VALUE ") === false) {
+            echo "key not found" . PHP_EOL;
+            return false;
+        }
+        return $this->parseKey($output);
+    }
+
+    /**
+     * @param string $key
+     * @return bool
      */
     public function delete(string $key)
     {
-        $this->sendCommand(1);
+        return "DELETED" === $this->sendCommand("delete " . $key);
     }
 
     /**
@@ -110,5 +154,26 @@ Class Memcached
         fclose($socket);
 
         return trim($buf);
+    }
+
+    /**
+     * @param string $data
+     * @return array|bool
+     */
+    protected function parseKey(string $data)
+    {
+        $expArr = explode("\r\n", $data);
+        $args = explode(" ", $expArr[0]);
+        if ($expArr[2] !== "END") {
+            echo "something wrong" . PHP_EOL;
+            return false;
+        }
+
+        return [
+            "key" => $args[1],
+            "flag" => $args[2],
+            "size" => $args[3],
+            "value" => $expArr[1],
+        ];
     }
 }
