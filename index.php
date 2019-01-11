@@ -1,5 +1,5 @@
 <?php
-require_once("lib/memcached.php");
+require_once("lib/Memcached.php");
 
 use \Alleswebdev\Tools\Memcached;
 
