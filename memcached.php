@@ -52,7 +52,7 @@ Class Memcached
             return false;
         }
 
-        while ((!feof($this->socket))) {
+        while (!feof($this->socket)) {
             $this->buf .= fgets($this->socket, 256);
             if (strpos($this->buf, "END\r\n") !== false) {
                 break;
