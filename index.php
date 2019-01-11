@@ -7,9 +7,9 @@ ob_implicit_flush();
 
 $app = new Memcached();
 $app->connect();
-$app->set("www", "asdf") . PHP_EOL;
-echo $app->get("www")['value'] . PHP_EOL;
-$app->delete("www") . PHP_EOL;
+$app->set("testkey", "testdata 222 111 32412") . PHP_EOL;
+echo $app->get("testkey")['value'] . PHP_EOL;
+$app->delete("testkey") . PHP_EOL;
 echo $app->stat();
 echo PHP_EOL;
 $app->close();
