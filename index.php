@@ -7,7 +7,7 @@ ob_implicit_flush();
 
 $app = new Memcached();
 $app->connect();
-$app->set("testkey", "testdata 222 111 32412") . PHP_EOL;
+$app->set("testkey", "testdata 222 111 32412");
 echo $app->get("testkey")['value'] . PHP_EOL;
 $app->delete("testkey") . PHP_EOL;
 echo $app->stat();
