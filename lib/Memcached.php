@@ -77,12 +77,6 @@ Class Memcached
             if (strpos($this->buf, "VERSION ") !== false) {
                 break;
             }
-            if (strpos($this->buf, "NOT_FOUND") !== false) {
-                break;
-            }
-            if (strpos($this->buf, "DELETED") !== false) {
-                break;
-            }
         }
 
         return trim($this->buf);
